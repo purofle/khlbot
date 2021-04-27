@@ -1,8 +1,8 @@
 import asyncio
 import json
-import logging
 from yarl import URL
 from .utils import raise_for_return_code
+from . import logger
 from aiohttp import ClientSession
 from aiohttp.http_websocket import WSMsgType
 
@@ -10,7 +10,8 @@ class KaiHeiLaApplication:
     def __init__(
             self,
             token: str,
-            loop: asyncio.AbstractEventLoop = None
+            loop: asyncio.AbstractEventLoop = None,
+            debug: bool = False
             ) -> None:
         self.baseURL = "https://www.kaiheila.cn/api"
         self.loop = loop or asyncio.get_event_loop()
@@ -22,7 +23,7 @@ class KaiHeiLaApplication:
                     }
                 )
         self.gateway: str = ""
-        self.logger: log
+        self.logger = logger.LoggingLogger(**{"debug": True} if debug else {})
 
     def url_gen(self, path: str) -> str:
         return str(URL(self.baseURL) / "v3" / path)
@@ -37,7 +38,8 @@ class KaiHeiLaApplication:
             self.gateway = gateway
             return gateway
 
-    async def ws_hello(self):
+    async def websocket(self):        
+        self.logger.info("websocket: connected")
         async with self.session.ws_connect(
                 self.gateway,
                 timeout=6.0,
@@ -46,8 +48,8 @@ class KaiHeiLaApplication:
             try:
                 while True:
                     message = await ws.receive()
-                    print(message.data)
                     if message.type == WSMsgType.TEXT:
+                        self.logger.debug("Received Data: "+message.data)
                         data = json.loads(message.data)
             except ValueError as e:
                 print(e)
@@ -58,7 +60,7 @@ class KaiHeiLaApplication:
     
     async def main(self):
         await self.getGateway()
-        await self.ws_hello()
+        await self.websocket()
 
     def launch(self):
         try:
