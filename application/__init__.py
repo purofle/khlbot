@@ -1,10 +1,12 @@
 import asyncio
 import json
+import aiohttp
 from yarl import URL
 from .utils import raise_for_return_code
 from . import logger
 from aiohttp import ClientSession
 from aiohttp.http_websocket import WSMsgType
+from aiohttp.client_ws import ClientWebSocketResponse
 
 
 class KaiHeiLaApplication:
@@ -19,6 +21,7 @@ class KaiHeiLaApplication:
         )
         self.gateway: str = ""
         self.logger = logger.LoggingLogger(**{"debug": True} if debug else {})
+        self.buffer = {"sn": 0}
 
     def url_gen(self, path: str) -> str:
         return str(URL(self.baseURL) / "v3" / path)
@@ -34,17 +37,26 @@ class KaiHeiLaApplication:
             self.gateway = gateway
             return gateway
 
+    async def ws_ping(self, ws_connect: ClientWebSocketResponse, delay: float = 30.0):
+        while True:
+            self.logger.debug("websocket: ping!")
+            await ws_connect.send_json({"s": 2, "sn": self.buffer["sn"]})
+            self.logger.debug("sn:{}".format(self.buffer["sn"]))
+            await asyncio.sleep(delay)
+
     async def websocket(self):
-        self.logger.info("websocket: connected")
-        async with self.session.ws_connect(
-            self.gateway, timeout=6.0, autoping=False
-        ) as ws:
+        async with self.session.ws_connect(self.gateway) as ws:
+            self.logger.info("websocket: connected")
+            self.loop.create_task(self.ws_ping(ws))
+            self.logger.info("websocket: ping tasks created")
             try:
                 while True:
                     message = await ws.receive()
                     if message.type == WSMsgType.TEXT:
                         self.logger.debug("Received Data: " + message.data)
                         data = json.loads(message.data)
+                        if data["s"] == 0:
+                            self.buffer["sn"] += 1
             except ValueError as e:
                 print(e)
 
