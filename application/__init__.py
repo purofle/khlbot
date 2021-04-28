@@ -1,23 +1,29 @@
 import asyncio
 import json
-import aiohttp
+from typing import Optional
 from yarl import URL
 from .utils import raise_for_return_code
 from . import logger
 from aiohttp import ClientSession
 from aiohttp.http_websocket import WSMsgType
 from aiohttp.client_ws import ClientWebSocketResponse
+from graia.broadcast import Broadcast
 
 
 class KaiHeiLaApplication:
+
+
     def __init__(
-        self, token: str, loop: asyncio.AbstractEventLoop = None, debug: bool = False
+        self,
+        token: str,
+        broadcast: Broadcast,
+        debug: bool = False
     ) -> None:
+        self.broadcast = broadcast
         self.baseURL = "https://www.kaiheila.cn/api"
-        self.loop = loop or asyncio.get_event_loop()
         self.token = token
         self.session = ClientSession(
-            loop=loop, headers={"Authorization": "Bot {}".format(self.token)}
+            loop=broadcast.loop, headers={"Authorization": "Bot {}".format(self.token)}
         )
         self.gateway: str = ""
         self.logger = logger.LoggingLogger(**{"debug": True} if debug else {})
@@ -55,7 +61,7 @@ class KaiHeiLaApplication:
     async def websocket(self):
         async with self.session.ws_connect(self.gateway) as ws:
             self.logger.info("websocket: connected")
-            self.loop.create_task(self.ws_ping(ws))
+            self.broadcast.loop.create_task(self.ws_ping(ws))
             self.logger.info("websocket: ping tasks created")
             try:
                 while True:
@@ -63,19 +69,20 @@ class KaiHeiLaApplication:
                     if message.type == WSMsgType.TEXT:
                         data = json.loads(message.data)
                         self.logger.debug("Received Data: " + str(data))
-                        self.loop.create_task(self.ws_message(data))
+                        self.broadcast.loop.create_task(self.ws_message(data))
             except ValueError as e:
                 print(e)
 
-    async def stop(self):
-        await self.session.close()
-
     async def main(self):
-        await self.getGateway()
         await self.websocket()
 
     def launch(self):
+        loop = self.broadcast.loop
+
+        if not self.gateway:
+            loop.run_until_complete(self.getGateway())
+
         try:
-            print(self.loop.run_until_complete(self.main()))
+            loop.run_until_complete(self.main())
         finally:
-            self.loop.run_until_complete(self.stop())
+            loop.run_until_complete(self.session.close())
