@@ -44,6 +44,14 @@ class KaiHeiLaApplication:
             self.logger.debug("sn:{}".format(self.buffer["sn"]))
             await asyncio.sleep(delay)
 
+    async def ws_message(self, message: dict):
+        if message["s"] == 0:
+            # message
+            self.buffer["sn"] += 1
+        if message["s"] == 3:
+            # pong
+            self.logger.debug("websocket: pong!")
+
     async def websocket(self):
         async with self.session.ws_connect(self.gateway) as ws:
             self.logger.info("websocket: connected")
@@ -53,10 +61,9 @@ class KaiHeiLaApplication:
                 while True:
                     message = await ws.receive()
                     if message.type == WSMsgType.TEXT:
-                        self.logger.debug("Received Data: " + message.data)
                         data = json.loads(message.data)
-                        if data["s"] == 0:
-                            self.buffer["sn"] += 1
+                        self.logger.debug("Received Data: " + str(data))
+                        self.loop.create_task(self.ws_message(data))
             except ValueError as e:
                 print(e)
 
