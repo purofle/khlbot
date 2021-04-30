@@ -1,34 +1,36 @@
-from application.exceptions import InvaildArgument
 import asyncio
 import json
 from typing import Optional
-from yarl import URL
-from .utils import raise_for_return_code, type_map
-from . import logger
+
 from aiohttp import ClientSession
-from aiohttp.http_websocket import WSMsgType
 from aiohttp.client_ws import ClientWebSocketResponse
+from aiohttp.http_websocket import WSMsgType
 from graia.broadcast import Broadcast
 from graia.broadcast.builtin.event import BaseEvent
+from graia.broadcast.utilles import run_always_await
+from yarl import URL
+
+import application.event.kaiheila
+
+from . import logger
+from .utils import raise_for_return_code, type_map
 
 
 class KaiHeiLaApplication:
-
-
     def __init__(
-        self,
-        token: str,
-        broadcast: Broadcast,
-        debug: bool = False
+        self, token: str, broadcast: Broadcast, debug: bool = False
     ) -> None:
         self.broadcast = broadcast
         self.baseURL = "https://www.kaiheila.cn/api"
         self.token = token
         self.session = ClientSession(
-            loop=broadcast.loop, headers={"Authorization": "Bot {}".format(self.token)}
+            loop=broadcast.loop,
+            headers={"Authorization": "Bot {}".format(self.token)},
         )
         self.gateway: str = ""
-        self.logger = logger.LoggingLogger(**{"debug": True} if debug else {})
+        self.logger = logger.LoggingLogger(
+            **{"debug": True} if debug else {}
+        )
         self.buffer = {"sn": 0}
 
     def url_gen(self, path: str) -> str:
@@ -45,10 +47,14 @@ class KaiHeiLaApplication:
             self.gateway = gateway
             return gateway
 
-    async def ws_ping(self, ws_connect: ClientWebSocketResponse, delay: float = 30.0):
+    async def ws_ping(
+        self, ws_connect: ClientWebSocketResponse, delay: float = 30.0
+    ):
         while True:
             self.logger.debug("websocket: ping!")
-            await ws_connect.send_json({"s": 2, "sn": self.buffer["sn"]})
+            await ws_connect.send_json(
+                {"s": 2, "sn": self.buffer["sn"]}
+            )
             self.logger.debug("sn:{}".format(self.buffer["sn"]))
             await asyncio.sleep(delay)
 
@@ -61,31 +67,54 @@ class KaiHeiLaApplication:
             self.logger.debug("websocket: pong!")
 
     @staticmethod
-    def auto_parse_by_type(original_dict: dict) -> BaseEvent:
-        if not original_dict.get("type"):
-            event_type = Broadcast.findEvent(original_dict.get("type"))
-            if not event_type:
-                raise ValueError("Cannot find event: {}".format(original_dict.get("type")))
+    async def auto_parse_by_type(original_dict: dict) -> BaseEvent:
+        event_int = int(original_dict.get("type"))
+        event_type_str = type_map.get(event_int)
+        if not event_type_str:
+            raise ValueError("No such as event {}".format(event_int))
+        event_type = Broadcast.findEvent(event_type_str)
 
-        return await run_always
+        if not event_type:
+            raise ValueError(
+                "Cannot find event: {}".format(event_type_str)
+            )
+
+        return await run_always_await(
+            event_type.parse_obj(
+                {
+                    k: v
+                    for k, v in original_dict.items()
+                    if k != "type"
+                }
+            )
+        )
 
     async def websocket(self):
         async with self.session.ws_connect(self.gateway) as ws:
             self.logger.info("websocket: connected")
-            self.broadcast.loop.create_task(self.ws_ping(ws))
+            ws_ping = self.broadcast.loop.create_task(
+                self.ws_ping(ws)
+            )
             self.logger.info("websocket: ping tasks created")
             try:
                 while True:
                     message = await ws.receive()
                     if message.type == WSMsgType.TEXT:
                         data = json.loads(message.data)
-                        self.logger.debug("Received Data: " + str(data))
-                        self.broadcast.loop.create_task(self.ws_message(data))
+                        self.logger.debug(
+                            "Received Data: " + str(data)
+                        )
+                        self.broadcast.loop.create_task(
+                            self.ws_message(data)
+                        )
 
-                        data = data["d"]
+                        if data.get("d") and data.get("s") == 0:
+                            ev = await self.auto_parse_by_type(
+                                data["d"]
+                            )
 
-            except ValueError as e:
-                print(e)
+            finally:
+                ws_ping.cancel()
 
     async def main(self):
         await self.websocket()
