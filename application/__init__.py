@@ -14,6 +14,7 @@ import application.event.kaiheila
 
 from . import logger
 from .utils import raise_for_return_code, type_map
+from .context import enter_context
 
 
 class KaiHeiLaApplication:
@@ -109,9 +110,12 @@ class KaiHeiLaApplication:
                         )
 
                         if data.get("d") and data.get("s") == 0:
-                            ev = await self.auto_parse_by_type(
+                            event = await self.auto_parse_by_type(
                                 data["d"]
                             )
+
+                            with enter_context(app=self, event_i=event):
+                                self.broadcast.postEvent(event)
 
             finally:
                 ws_ping.cancel()
