@@ -12,9 +12,7 @@ class KaiheilaEvent(BaseEvent):
     def type_limit(cls, v):
         if cls.type != v:
             raise Exception(
-                "{0}'s type must be '{1}', not '{2}'".format(
-                    cls.__name__, cls.type, v
-                )
+                "{0}'s type must be '{1}', not '{2}'".format(cls.__name__, cls.type, v)
             )
         return v
 

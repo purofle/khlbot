@@ -18,9 +18,7 @@ from .context import enter_context
 
 
 class KaiHeiLaApplication:
-    def __init__(
-        self, token: str, broadcast: Broadcast, debug: bool = False
-    ) -> None:
+    def __init__(self, token: str, broadcast: Broadcast, debug: bool = False) -> None:
         self.broadcast = broadcast
         self.baseURL = "https://www.kaiheila.cn/api"
         self.token = token
@@ -29,9 +27,7 @@ class KaiHeiLaApplication:
             headers={"Authorization": "Bot {}".format(self.token)},
         )
         self.gateway: str = ""
-        self.logger = logger.LoggingLogger(
-            **{"debug": True} if debug else {}
-        )
+        self.logger = logger.LoggingLogger(**{"debug": True} if debug else {})
         self.buffer = {"sn": 0}
 
     def url_gen(self, path: str) -> str:
@@ -48,14 +44,10 @@ class KaiHeiLaApplication:
             self.gateway = gateway
             return gateway
 
-    async def ws_ping(
-        self, ws_connect: ClientWebSocketResponse, delay: float = 30.0
-    ):
+    async def ws_ping(self, ws_connect: ClientWebSocketResponse, delay: float = 30.0):
         while True:
             self.logger.debug("websocket: ping!")
-            await ws_connect.send_json(
-                {"s": 2, "sn": self.buffer["sn"]}
-            )
+            await ws_connect.send_json({"s": 2, "sn": self.buffer["sn"]})
             self.logger.debug("sn:{}".format(self.buffer["sn"]))
             await asyncio.sleep(delay)
 
@@ -76,47 +68,31 @@ class KaiHeiLaApplication:
         event_type = Broadcast.findEvent(event_type_str)
 
         if not event_type:
-            raise ValueError(
-                "Cannot find event: {}".format(event_type_str)
-            )
+            raise ValueError("Cannot find event: {}".format(event_type_str))
 
         return await run_always_await(
             event_type.parse_obj(
-                {
-                    k: v
-                    for k, v in original_dict.items()
-                    if k != "type"
-                }
+                {k: v for k, v in original_dict.items() if k != "type"}
             )
         )
 
     async def websocket(self):
         async with self.session.ws_connect(self.gateway) as ws:
             self.logger.info("websocket: connected")
-            ws_ping = self.broadcast.loop.create_task(
-                self.ws_ping(ws)
-            )
+            ws_ping = self.broadcast.loop.create_task(self.ws_ping(ws))
             self.logger.info("websocket: ping tasks created")
             try:
                 while True:
                     message = await ws.receive()
                     if message.type == WSMsgType.TEXT:
                         data = json.loads(message.data)
-                        self.logger.debug(
-                            "Received Data: " + str(data)
-                        )
-                        self.broadcast.loop.create_task(
-                            self.ws_message(data)
-                        )
+                        self.logger.debug("Received Data: " + str(data))
+                        self.broadcast.loop.create_task(self.ws_message(data))
 
                         if data.get("d") and data.get("s") == 0:
-                            event = await self.auto_parse_by_type(
-                                data["d"]
-                            )
+                            event = await self.auto_parse_by_type(data["d"])
 
-                            with enter_context(
-                                app=self, event_i=event
-                            ):
+                            with enter_context(app=self, event_i=event):
                                 self.broadcast.postEvent(event)
 
             finally:
