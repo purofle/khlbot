@@ -114,7 +114,9 @@ class KaiHeiLaApplication:
                                 data["d"]
                             )
 
-                            with enter_context(app=self, event_i=event):
+                            with enter_context(
+                                app=self, event_i=event
+                            ):
                                 self.broadcast.postEvent(event)
 
             finally:

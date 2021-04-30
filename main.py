@@ -10,8 +10,10 @@ bcc = Broadcast(loop=loop)
 
 app = KaiHeiLaApplication(token=token, broadcast=bcc, debug=True)
 
+
 @bcc.receiver(TextMessageEvent)
 async def tme(event: TextMessageEvent):
     print(event.text)
+
 
 app.launch()

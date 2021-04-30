@@ -24,6 +24,7 @@ class KaiheilaEvent(BaseEvent):
     class Dispatcher:
         pass
 
+
 class ApplicationDispatcher(BaseDispatcher):
     @staticmethod
     async def catch(interface: DispatcherInterface):
