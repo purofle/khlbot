@@ -2,7 +2,7 @@ from graia.broadcast.entities.dispatcher import BaseDispatcher
 from pydantic import validator
 from graia.broadcast import BaseEvent
 from graia.broadcast.interfaces.dispatcher import DispatcherInterface
-
+from application.context import application
 
 class KaiheilaEvent(BaseEvent):
     __base_event__ = True
@@ -22,8 +22,9 @@ class KaiheilaEvent(BaseEvent):
     class Dispatcher:
         pass
 
-
 class ApplicationDispatcher(BaseDispatcher):
+
     @staticmethod
     async def catch(interface: DispatcherInterface):
-        return None
+        if getattr(interface.annotation, "__name__", None) == "KaiHeiLaApplication":
+            return application.get()

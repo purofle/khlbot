@@ -3,6 +3,7 @@ from application import KaiHeiLaApplication
 from application.event.kaiheila import TextMessageEvent
 from graia.broadcast import Broadcast
 from config import token
+from application.group import Member
 
 loop = asyncio.get_event_loop()
 
@@ -12,8 +13,8 @@ app = KaiHeiLaApplication(token=token, broadcast=bcc, debug=True)
 
 
 @bcc.receiver(TextMessageEvent)
-async def tme(event: TextMessageEvent):
-    print(event.text)
+async def tme(app: KaiHeiLaApplication, sender: Member):
+    print(sender.id)
 
 
 app.launch()
