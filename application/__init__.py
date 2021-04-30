@@ -1,13 +1,15 @@
+from application.exceptions import InvaildArgument
 import asyncio
 import json
 from typing import Optional
 from yarl import URL
-from .utils import raise_for_return_code
+from .utils import raise_for_return_code, type_map
 from . import logger
 from aiohttp import ClientSession
 from aiohttp.http_websocket import WSMsgType
 from aiohttp.client_ws import ClientWebSocketResponse
 from graia.broadcast import Broadcast
+from graia.broadcast.builtin.event import BaseEvent
 
 
 class KaiHeiLaApplication:
@@ -58,6 +60,15 @@ class KaiHeiLaApplication:
             # pong
             self.logger.debug("websocket: pong!")
 
+    @staticmethod
+    def auto_parse_by_type(original_dict: dict) -> BaseEvent:
+        if not original_dict.get("type"):
+            event_type = Broadcast.findEvent(original_dict.get("type"))
+            if not event_type:
+                raise ValueError("Cannot find event: {}".format(original_dict.get("type")))
+
+        return await run_always
+
     async def websocket(self):
         async with self.session.ws_connect(self.gateway) as ws:
             self.logger.info("websocket: connected")
@@ -70,6 +81,9 @@ class KaiHeiLaApplication:
                         data = json.loads(message.data)
                         self.logger.debug("Received Data: " + str(data))
                         self.broadcast.loop.create_task(self.ws_message(data))
+
+                        data = data["d"]
+
             except ValueError as e:
                 print(e)
 
