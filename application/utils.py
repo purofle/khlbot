@@ -14,6 +14,5 @@ def raise_for_return_code(code: dict):
     if exception_code:
         raise exception_code
 
-type_map = {
-        0: "TextMessageEvent"
-        }
+
+type_map = {1: "TextMessageEvent"}
