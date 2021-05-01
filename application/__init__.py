@@ -34,14 +34,7 @@ class KaiHeiLaApplication:
         self.buffer = {"sn": 0}
 
     def url_gen(self, path: str) -> str:
-        """
 
-        Args:
-          path: str:
-
-        Returns:
-
-        """
         return str(URL(self.baseURL) / "v3" / path)
 
     async def getGateway(self) -> str:
@@ -72,14 +65,20 @@ class KaiHeiLaApplication:
 
     @staticmethod
     async def auto_parse_by_type(original_dict: dict) -> BaseEvent:
-        type_map = {"GROUP": "GroupMessage", "PERSON": "PersonMessage"}
-        event = original_dict.get("channel_type")
+        type_map = {
+            255: "SystemMessage",
+            "GROUP": "GroupMessage",
+            "PERSON": "PersonMessage",
+        }
+        channel_type: str = original_dict["channel_type"]
+        type_data: int = original_dict["type"]
+
+        if not (event := type_map.get(type_data)):
+            event = type_map[channel_type]
+
         if not event:
             raise ValueError("No such as event {}".format(event))
-        event_type = Broadcast.findEvent(type_map[event])
-
-        if not event_type:
-            raise ValueError("Cannot find event: {}".format(type_map[event]))
+        event_type = Broadcast.findEvent(event)
 
         return await run_always_await(
             event_type.parse_obj(
@@ -112,11 +111,10 @@ class KaiHeiLaApplication:
                         data = json.loads(message.data)
                         self.logger.debug("Received Data: " + str(data))
                         self.broadcast.loop.create_task(self.ws_message(data))
-                        if data.get("d") and data.get("s") == 0:
-                            if not data["d"]["extra"]["author"].get("bot"):
-                                event = await self.auto_parse_by_type(data["d"])
-                                with enter_context(app=self, event_i=event):
-                                    self.broadcast.postEvent(event)
+                        if data.get("s") == 0:
+                            event = await self.auto_parse_by_type(data["d"])
+                            with enter_context(app=self, event_i=event):
+                                self.broadcast.postEvent(event)
 
             finally:
                 ws_ping.cancel()
