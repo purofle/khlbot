@@ -10,7 +10,7 @@ from graia.broadcast.builtin.event import BaseEvent
 from graia.broadcast.utilles import run_always_await
 from yarl import URL
 
-import application.event.kaiheila # init
+import application.event.kaiheila  # init
 
 from . import logger
 from .utils import raise_for_return_code, type_map
@@ -76,13 +76,15 @@ class KaiHeiLaApplication:
                 {k: v for k, v in original_dict.items() if k != "type"}
             )
         )
+
     async def sendGroupMessage(self, group: Union[Group, int], message: str):
         async with self.session.post(
-                self.url_gen("message/create"),
-                data={
-                    "target_id": group.id if isinstance(group, Group) else group,
-                    "content": message
-                    }) as r:
+            self.url_gen("message/create"),
+            data={
+                "target_id": group.id if isinstance(group, Group) else group,
+                "content": message,
+            },
+        ) as r:
             r.raise_for_status()
             r = await r.json()
             raise_for_return_code(r)
@@ -101,7 +103,11 @@ class KaiHeiLaApplication:
                         self.logger.debug("Received Data: " + str(data))
                         self.broadcast.loop.create_task(self.ws_message(data))
 
-                        if data.get("d") and data.get("s") == 0 and data["d"]["extra"]["author"].get("bot") == None:
+                        if (
+                            data.get("d")
+                            and data.get("s") == 0
+                            and data["d"]["extra"]["author"].get("bot") == None
+                        ):
                             event = await self.auto_parse_by_type(data["d"])
                             with enter_context(app=self, event_i=event):
                                 self.broadcast.postEvent(event)

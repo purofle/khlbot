@@ -17,4 +17,5 @@ async def tme(app: KaiHeiLaApplication, event: TextMessageEvent, text: str):
     if text.startswith("复读"):
         await app.sendGroupMessage(event.target_id, text[2:])
 
+
 app.launch()
