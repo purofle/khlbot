@@ -6,11 +6,6 @@ from pydantic import BaseModel
 
 class Member(BaseModel):
     id: int
-    username: str
-    identify_num: int
-    os: int
-    avatar: str
-    nickname: str
 
 
 class Group(BaseModel):

@@ -13,8 +13,8 @@ app = KaiHeiLaApplication(token=token, broadcast=bcc, debug=True)
 
 
 @bcc.receiver(TextMessageEvent)
-async def tme(app: KaiHeiLaApplication, sender: Member):
-    print(sender.id)
+async def tme(app: KaiHeiLaApplication, author: Member):
+    print(author.id)
 
 
 app.launch()
