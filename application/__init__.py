@@ -76,9 +76,13 @@ class KaiHeiLaApplication:
         if not (event := type_map.get(type_data)):
             event = type_map[channel_type]
 
-        if not event:
-            raise ValueError("No such as event {}".format(event))
+        if event == "SystemMessage":
+            event = original_dict["extra"]["type"]
+
         event_type = Broadcast.findEvent(event)
+
+        if not event_type:
+           raise ValueError("There is no such event: {}".format(event))
 
         return await run_always_await(
             event_type.parse_obj(
