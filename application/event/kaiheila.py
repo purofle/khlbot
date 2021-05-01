@@ -10,12 +10,11 @@ class TextMessageEvent(KaiheilaEvent):
     type = "TextMessageEvent"
     text: str = Field(..., alias="content")
     target_id: int
-    member: Member
 
     class Dispatcher(BaseDispatcher):
         mixin = [ApplicationDispatcher]
 
         @staticmethod
         async def catch(interface: DispatcherInterface):
-            if interface.annotation is Member:
-                return interface.event.author
+            if interface.annotation is str:
+                return interface.event.text

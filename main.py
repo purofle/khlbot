@@ -13,8 +13,8 @@ app = KaiHeiLaApplication(token=token, broadcast=bcc, debug=True)
 
 
 @bcc.receiver(TextMessageEvent)
-async def tme(app: KaiHeiLaApplication, event: TextMessageEvent):
-    print(event.target_id)
-
+async def tme(app: KaiHeiLaApplication, event: TextMessageEvent, text: str):
+    if text.startswith("复读"):
+        await app.sendGroupMessage(event.target_id, text[2:])
 
 app.launch()
