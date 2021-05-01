@@ -4,6 +4,7 @@ from graia.broadcast import BaseEvent
 from graia.broadcast.interfaces.dispatcher import DispatcherInterface
 from application.context import application
 
+
 class KaiheilaEvent(BaseEvent):
     __base_event__ = True
     type: str
@@ -22,6 +23,7 @@ class KaiheilaEvent(BaseEvent):
     class Dispatcher:
         pass
 
+
 class ApplicationDispatcher(BaseDispatcher):
     @staticmethod
     async def catch(interface: DispatcherInterface):
@@ -31,6 +33,7 @@ class ApplicationDispatcher(BaseDispatcher):
 
 class EmptyDispatcher(BaseDispatcher):
     mixin = [ApplicationDispatcher]
+
     @staticmethod
     async def catch(interface):
         pass

@@ -5,6 +5,7 @@ from graia.broadcast.interfaces.dispatcher import DispatcherInterface
 from ..group import Group, Member
 from pydantic import Field, validator
 
+
 class GroupMessage(KaiheilaEvent):
     type = "GroupMessage"
 
@@ -18,13 +19,14 @@ class GroupMessage(KaiheilaEvent):
     @validator("member", pre=True, always=True)
     def subject_handle_member(cls, v, values):
         return Member.parse_obj(values["origin_extra"]["author"])
-    
+
     @validator("group", pre=True, always=True)
     def subject_handle_group(cls, v, values):
         return Group(id=values["target_id"])
 
     class Dispatcher(BaseDispatcher):
         mixin = [ApplicationDispatcher]
+
         @staticmethod
         async def catch(interface: DispatcherInterface):
             if interface.annotation is Member:
@@ -33,6 +35,7 @@ class GroupMessage(KaiheilaEvent):
                 return interface.event.group
             elif interface.annotation is str:
                 return interface.event.message
+
 
 class PersonMessage(KaiheilaEvent):
     type = "PersonMessage"
@@ -47,6 +50,7 @@ class PersonMessage(KaiheilaEvent):
 
     class Dispatcher(BaseDispatcher):
         mixin = [ApplicationDispatcher]
+
         @staticmethod
         async def catch(interface: DispatcherInterface):
             if interface.annotation is Member:

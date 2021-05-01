@@ -20,6 +20,7 @@ from .group import Group
 
 class KaiHeiLaApplication:
     """ """
+
     def __init__(self, token: str, broadcast: Broadcast, debug: bool = False) -> None:
         self.broadcast = broadcast
         self.baseURL = "https://www.kaiheila.cn/api"
@@ -36,7 +37,7 @@ class KaiHeiLaApplication:
         """
 
         Args:
-          path: str: 
+          path: str:
 
         Returns:
 
@@ -71,7 +72,7 @@ class KaiHeiLaApplication:
 
     @staticmethod
     async def auto_parse_by_type(original_dict: dict) -> BaseEvent:
-        type_map = {"GROUP": "GroupMessage", "PERSON":"PersonMessage"}
+        type_map = {"GROUP": "GroupMessage", "PERSON": "PersonMessage"}
         event = original_dict.get("channel_type")
         if not event:
             raise ValueError("No such as event {}".format(event))
@@ -111,10 +112,7 @@ class KaiHeiLaApplication:
                         data = json.loads(message.data)
                         self.logger.debug("Received Data: " + str(data))
                         self.broadcast.loop.create_task(self.ws_message(data))
-                        if (
-                            data.get("d")
-                            and data.get("s") == 0
-                        ):
+                        if data.get("d") and data.get("s") == 0:
                             if not data["d"]["extra"]["author"].get("bot"):
                                 event = await self.auto_parse_by_type(data["d"])
                                 with enter_context(app=self, event_i=event):
