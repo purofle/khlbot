@@ -23,8 +23,14 @@ class KaiheilaEvent(BaseEvent):
         pass
 
 class ApplicationDispatcher(BaseDispatcher):
-
     @staticmethod
     async def catch(interface: DispatcherInterface):
         if getattr(interface.annotation, "__name__", None) == "KaiHeiLaApplication":
             return application.get()
+
+
+class EmptyDispatcher(BaseDispatcher):
+    mixin = [ApplicationDispatcher]
+    @staticmethod
+    async def catch(interface):
+        pass

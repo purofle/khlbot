@@ -1,6 +1,6 @@
 import asyncio
 from application import KaiHeiLaApplication
-from application.event.kaiheila import TextMessageEvent
+from application.event.kaiheila import GroupMessage
 from graia.broadcast import Broadcast
 from config import token
 from application.group import Member
@@ -9,13 +9,13 @@ loop = asyncio.get_event_loop()
 
 bcc = Broadcast(loop=loop)
 
-app = KaiHeiLaApplication(token=token, broadcast=bcc, debug=True)
+app = KaiHeiLaApplication(token=token, broadcast=bcc)
 
 
-@bcc.receiver(TextMessageEvent)
-async def tme(app: KaiHeiLaApplication, event: TextMessageEvent, text: str):
-    if text.startswith("复读"):
-        await app.sendGroupMessage(event.target_id, text[2:])
+@bcc.receiver(GroupMessage)
+async def tme(kha: KaiHeiLaApplication, member: Member, message: str):
+    print("收到消息：{}".format(message))
+    print(member.id)
 
 
 app.launch()

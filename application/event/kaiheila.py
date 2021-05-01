@@ -1,20 +1,55 @@
+from typing import Dict, Optional, Any
 from graia.broadcast.entities.dispatcher import BaseDispatcher
+from . import ApplicationDispatcher, EmptyDispatcher, KaiheilaEvent
 from graia.broadcast.interfaces.dispatcher import DispatcherInterface
-from . import ApplicationDispatcher, KaiheilaEvent
+from ..group import Group, Member
 from pydantic import Field, validator
-from ..group import Member, Group
-import pdb
 
+class GroupMessage(KaiheilaEvent):
+    type = "GroupMessage"
 
-class TextMessageEvent(KaiheilaEvent):
-    type = "TextMessageEvent"
-    text: str = Field(..., alias="content")
     target_id: int
+    message: str = Field(..., alias="content")
+    origin_extra: dict = Field(..., alias="extra")
+
+    member: Optional[Group] = None
+    group: Optional[Group] = None
+
+    @validator("member", pre=True, always=True)
+    def subject_handle_member(cls, v, values):
+        return Member.parse_obj(values["origin_extra"]["author"])
+    
+    @validator("group", pre=True, always=True)
+    def subject_handle_group(cls, v, values):
+        return Group(id=values["target_id"])
 
     class Dispatcher(BaseDispatcher):
         mixin = [ApplicationDispatcher]
-
         @staticmethod
         async def catch(interface: DispatcherInterface):
-            if interface.annotation is str:
-                return interface.event.text
+            if interface.annotation is Member:
+                return interface.event.member
+            elif interface.annotation is Group:
+                return interface.event.group
+            elif interface.annotation is str:
+                return interface.event.message
+
+class PersonMessage(KaiheilaEvent):
+    type = "PersonMessage"
+    message: str = Field(..., alias="content")
+    origin_extra: dict = Field(..., alias="extra")
+
+    member: Optional[Member] = None
+
+    @validator("member", pre=True, always=True)
+    def subject_handle_group(cls, v, values):
+        return Member.parse_obj(values["origin_extra"]["author"])
+
+    class Dispatcher(BaseDispatcher):
+        mixin = [ApplicationDispatcher]
+        @staticmethod
+        async def catch(interface: DispatcherInterface):
+            if interface.annotation is Member:
+                return interface.event.member
+            elif interface.annotation is str:
+                return interface.event.message

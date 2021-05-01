@@ -13,12 +13,13 @@ from yarl import URL
 import application.event.kaiheila  # init
 
 from . import logger
-from .utils import raise_for_return_code, type_map
+from .utils import raise_for_return_code
 from .context import enter_context
 from .group import Group
 
 
 class KaiHeiLaApplication:
+    """ """
     def __init__(self, token: str, broadcast: Broadcast, debug: bool = False) -> None:
         self.broadcast = broadcast
         self.baseURL = "https://www.kaiheila.cn/api"
@@ -32,6 +33,14 @@ class KaiHeiLaApplication:
         self.buffer = {"sn": 0}
 
     def url_gen(self, path: str) -> str:
+        """
+
+        Args:
+          path: str: 
+
+        Returns:
+
+        """
         return str(URL(self.baseURL) / "v3" / path)
 
     async def getGateway(self) -> str:
@@ -62,14 +71,14 @@ class KaiHeiLaApplication:
 
     @staticmethod
     async def auto_parse_by_type(original_dict: dict) -> BaseEvent:
-        event_int = int(original_dict.get("type"))
-        event_type_str = type_map.get(event_int)
-        if not event_type_str:
-            raise ValueError("No such as event {}".format(event_int))
-        event_type = Broadcast.findEvent(event_type_str)
+        type_map = {"GROUP": "GroupMessage", "PERSON":"PersonMessage"}
+        event = original_dict.get("channel_type")
+        if not event:
+            raise ValueError("No such as event {}".format(event))
+        event_type = Broadcast.findEvent(type_map[event])
 
         if not event_type:
-            raise ValueError("Cannot find event: {}".format(event_type_str))
+            raise ValueError("Cannot find event: {}".format(type_map[event]))
 
         return await run_always_await(
             event_type.parse_obj(
@@ -102,15 +111,14 @@ class KaiHeiLaApplication:
                         data = json.loads(message.data)
                         self.logger.debug("Received Data: " + str(data))
                         self.broadcast.loop.create_task(self.ws_message(data))
-
                         if (
                             data.get("d")
                             and data.get("s") == 0
-                            and data["d"]["extra"]["author"].get("bot") == None
                         ):
-                            event = await self.auto_parse_by_type(data["d"])
-                            with enter_context(app=self, event_i=event):
-                                self.broadcast.postEvent(event)
+                            if not data["d"]["extra"]["author"].get("bot"):
+                                event = await self.auto_parse_by_type(data["d"])
+                                with enter_context(app=self, event_i=event):
+                                    self.broadcast.postEvent(event)
 
             finally:
                 ws_ping.cancel()
@@ -119,6 +127,7 @@ class KaiHeiLaApplication:
         await self.websocket()
 
     def launch(self):
+        """ """
         loop = self.broadcast.loop
 
         if not self.gateway:
