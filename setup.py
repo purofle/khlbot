@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="khlbot-bcc",
-    version="1.0.2",
+    version="1.0.3",
     author="purofle",
     author_email="3272912942@qq.com",
     description="开黑啦 Bot websocket API 的 Python 实现.",
