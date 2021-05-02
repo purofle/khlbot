@@ -36,7 +36,6 @@ class GroupMessage(KaiheilaEvent):
             elif interface.annotation is str:
                 return interface.event.message
 
-
 class PersonMessage(KaiheilaEvent):
     type = "PersonMessage"
     message: str = Field(..., alias="content")
@@ -57,3 +56,22 @@ class PersonMessage(KaiheilaEvent):
                 return interface.event.member
             elif interface.annotation is str:
                 return interface.event.message
+
+
+class guild_member_online(KaiheilaEvent):
+    type = "guild_member_online"
+
+    body: dict
+    member: Optional[Member] = None
+
+    @validator("member", pre=True, always=True)
+    def subject_handle_user_id(cls, v, values):
+        return Member(id=values["body"]["user_id"])
+
+    class Dispatcher(BaseDispatcher):
+        mixin = [ApplicationDispatcher]
+
+        @staticmethod
+        async def catch(interface: DispatcherInterface):
+            if interface.annotation is Member:
+                return interface.event.member
