@@ -24,6 +24,7 @@ async def groupevent(
 
 app.launch()
 ```
+执行这段代码，在任意一个*机器人有权利发送文字消息*的频道发送：`hello`后就会在频道内受到机器人的回复：`hello!`
 ## 感谢
 - [`GraiaProject/Application`](https://github.com/GraiaProject/Application): 本框架大量参考这个项目，非常感谢
 ## 许可证
