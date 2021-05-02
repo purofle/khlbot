@@ -2,7 +2,7 @@ from graia.broadcast.entities.dispatcher import BaseDispatcher
 from pydantic import validator
 from graia.broadcast import BaseEvent
 from graia.broadcast.interfaces.dispatcher import DispatcherInterface
-from application.context import application
+from kaiheila.application.context import application
 
 
 class KaiheilaEvent(BaseEvent):
