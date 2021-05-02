@@ -10,7 +10,7 @@ from graia.broadcast.builtin.event import BaseEvent
 from graia.broadcast.utilles import run_always_await
 from yarl import URL
 
-import application.event.kaiheila  # init
+import application.kaiheila.event.kaiheila  # init
 
 from . import logger
 from .utils import raise_for_return_code
