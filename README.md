@@ -7,7 +7,6 @@
 一个简单的开黑啦bot的python实现.
 </div>
 
-## 介绍
 ## 使用例
 首先确保你已经使用`pip`安装了`khlbot-bcc`
 ```python
