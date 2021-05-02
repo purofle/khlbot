@@ -62,12 +62,12 @@ class PersonMessage(KaiheilaEvent):
 class guild_member_online(KaiheilaEvent):
     type = "guild_member_online"
 
-    body: dict
+    extra: dict
     member: Optional[Member] = None
 
     @validator("member", pre=True, always=True)
     def subject_handle_user_id(cls, v, values):
-        return Member(id=values["body"]["user_id"])
+        return Member(id=values["extra"]["body"]["user_id"])
 
     class Dispatcher(BaseDispatcher):
         mixin = [ApplicationDispatcher]
