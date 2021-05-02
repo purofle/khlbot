@@ -2,8 +2,8 @@
 
 # khlbot
 ---
-![PyPI](https://img.shields.io/pypi/v/khlbot-bcc)  
-![GitHub](https://img.shields.io/github/license/purofle/khlbot)
+![PyPI](https://img.shields.io/pypi/v/khlbot-bcc)
+![GitHub](https://img.shields.io/github/license/purofle/khlbot)  
 一个简单的开黑啦bot的python实现.
 </div>
 
