@@ -1,7 +1,15 @@
+<div align="center">
+
 # khlbot
-## 介绍
+---
+![PyPI](https://img.shields.io/pypi/v/khlbot-bcc)  
+![GitHub](https://img.shields.io/github/license/purofle/khlbot)
 一个简单的开黑啦bot的python实现.
+</div>
+
+## 介绍
 ## 使用例
+首先确保你已经使用`pip`安装了`khlbot-bcc`
 ```python
 import asyncio
 from kaiheila.application import KaiHeiLaApplication
