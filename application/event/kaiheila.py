@@ -36,6 +36,7 @@ class GroupMessage(KaiheilaEvent):
             elif interface.annotation is str:
                 return interface.event.message
 
+
 class PersonMessage(KaiheilaEvent):
     type = "PersonMessage"
     message: str = Field(..., alias="content")
