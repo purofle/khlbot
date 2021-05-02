@@ -82,7 +82,7 @@ class KaiHeiLaApplication:
         event_type = Broadcast.findEvent(event)
 
         if not event_type:
-           raise ValueError("There is no such event: {}".format(event))
+            raise ValueError("There is no such event: {}".format(event))
 
         return await run_always_await(
             event_type.parse_obj(
