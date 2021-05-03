@@ -26,8 +26,8 @@ async def groupevent(
         message: str,
         group: Group,
         member: Member):
-    if message == hello:
-        await app.sendGroupMessage(group, hello!)
+    if message == "hello":
+        await app.sendGroupMessage(group, "hello!")
 
 app.launch()
 ```
