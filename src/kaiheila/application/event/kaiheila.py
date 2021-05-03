@@ -9,7 +9,7 @@ from pydantic import Field, validator
 class GroupMessage(KaiheilaEvent):
     type = "GroupMessage"
 
-    target_id: int
+    target_id: str
     message: str = Field(..., alias="content")
     origin_extra: dict = Field(..., alias="extra")
 

@@ -19,8 +19,6 @@ from .group import Group
 
 
 class KaiHeiLaApplication:
-    """ """
-
     def __init__(self, token: str, broadcast: Broadcast, debug: bool = False) -> None:
         self.broadcast = broadcast
         self.baseURL = "https://www.kaiheila.cn/api"
@@ -37,7 +35,7 @@ class KaiHeiLaApplication:
 
         return str(URL(self.baseURL) / "v3" / path)
 
-    async def getGateway(self) -> str:
+    async def getgateway(self) -> str:
         async with self.session.get(
             self.url_gen("gateway/index") + "/?compress=0"
         ) as resp:
@@ -116,7 +114,11 @@ class KaiHeiLaApplication:
                         self.logger.debug("Received Data: " + str(data))
                         self.broadcast.loop.create_task(self.ws_message(data))
                         if data.get("s") == 0:
-                            event = await self.auto_parse_by_type(data["d"])
+                            try:
+                                event = await self.auto_parse_by_type(data["d"])
+                            except ValueError as e:
+                                self.logger.error(e)
+                                continue
                             with enter_context(app=self, event_i=event):
                                 self.broadcast.postEvent(event)
 
@@ -131,7 +133,7 @@ class KaiHeiLaApplication:
         loop = self.broadcast.loop
 
         if not self.gateway:
-            loop.run_until_complete(self.getGateway())
+            loop.run_until_complete(self.getgateway())
 
         try:
             loop.run_until_complete(self.main())

@@ -6,4 +6,4 @@ class Member(BaseModel):
 
 
 class Group(BaseModel):
-    id: int
+    id: str
