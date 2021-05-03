@@ -18,7 +18,7 @@ from kaiheila.application.group import Group, Member
 
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
-app = KaiHeiLaApplication(1/MTAyNTQ=/KzjLuKNLoZk3kRWrwR9JYQ==, bcc)
+app = KaiHeiLaApplication("你的token", bcc)
 
 @bcc.receiver(GroupMessage)
 async def groupevent(
